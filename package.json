@@ -9,7 +9,7 @@
   },
   "packageManager": "pnpm@12.6.0",
   "bin": {
-    "mujun": "./dist/cli.js"
+    "mujun": "dist/cli.js"
   },
   "exports": {
     ".": {
