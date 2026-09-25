@@ -7,6 +7,8 @@ type Options = {
   entityPattern: string;
   // `TABLE`（列なし）を見る範囲。underscore: 下線を含む名前だけ（`API` のような略語を拾わない）
   bareEntity: "all" | "underscore" | "none";
+  // bareEntity に関わらず、列なしの名前を全部見る文書（glob）。ER 図を書いた文書など
+  strictFiles: string[];
   allow: string[];
   // 当時の名前を残す記録（設計の履歴など）は見ない
   ignoreFiles: string[];
@@ -18,6 +20,7 @@ export default defineRule<Options>({
   defaultOptions: {
     entityPattern: "[A-Z][A-Z0-9_]*",
     bareEntity: "underscore",
+    strictFiles: [],
     allow: ["PK", "FK", "UK", "NULL", "TABLE", "ENTITY"],
     ignoreFiles: [],
   },
@@ -28,14 +31,17 @@ export default defineRule<Options>({
     const re = new RegExp(`^(${options.entityPattern})(?:\\.([a-z_][a-z0-9_]*))?$`);
     for (const doc of project.docs) {
       if (options.ignoreFiles.some((g) => matchesGlob(doc.path, g))) continue;
+      const bare = options.strictFiles.some((g) => matchesGlob(doc.path, g))
+        ? "all"
+        : options.bareEntity;
       for (const s of doc.codeSpans) {
         const m = re.exec(s.value);
         const table = m?.[1];
         if (table === undefined || options.allow.includes(table)) continue;
         const col = m?.[2];
         if (col === undefined) {
-          if (options.bareEntity === "none") continue;
-          if (options.bareEntity === "underscore" && !table.includes("_")) continue;
+          if (bare === "none") continue;
+          if (bare === "underscore" && !table.includes("_")) continue;
         }
         const e = entities.get(table);
         if (e === undefined) {
@@ -65,6 +71,13 @@ export default defineRule<Options>({
         "er.md": "```mermaid\nerDiagram\n  ORDER_LINE {\n    int id PK\n  }\n```\n",
         "design.md": "| 表 | 役割 |\n| --- | --- |\n| `ORDER_ITEM` | 明細 |\n",
       },
+    },
+    {
+      name: "strictFiles では下線の無い名前も見る",
+      files: {
+        "er.md": "```mermaid\nerDiagram\n  USER {\n    int id PK\n  }\n```\n\n`ACCOUNT` を持つ。\n",
+      },
+      options: { strictFiles: ["er.md"] },
     },
   ],
   valid: [

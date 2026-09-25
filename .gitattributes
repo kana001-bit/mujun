@@ -1,0 +1,2 @@
+# どの OS でも LF でチェックアウトする（Prettier は LF を期待する。Windows の CI で全ファイルが書式違いになったため）
+* text=auto eol=lf

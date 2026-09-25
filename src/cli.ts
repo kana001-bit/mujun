@@ -43,15 +43,24 @@ const check = async (): Promise<number> => {
   }
   const errors = problems.filter((p) => p.severity === "error").length;
   const warns = problems.length - errors;
-  if (problems.length > 0) console.error(`mujun: error ${errors} / warn ${warns}`);
-  else if (!values.quiet) console.log(`mujun: ok — ${files.size} files`);
+  // --quiet では warn だけのときは何も出さない（フックで毎回走らせても静かにする）
+  if (errors > 0 || (!values.quiet && warns > 0)) {
+    console.error(`mujun: error ${errors} / warn ${warns}`);
+  } else if (!values.quiet) console.log(`mujun: ok — ${files.size} files`);
   return errors > 0 ? 1 : 0;
 };
 
 const runSelftest = async (): Promise<number> => {
   const loaded = await load();
   const rules = loaded === undefined ? builtinRules : [...allRules(loaded.config).values()];
-  const results = selftest(rules);
+  const project =
+    loaded === undefined
+      ? undefined
+      : {
+          files: readFiles(loaded.config, loaded.root),
+          options: new Map(resolveRuns(loaded.config).map((r) => [r.rule.id, r.options] as const)),
+        };
+  const results = selftest(rules, project);
   for (const r of results) {
     if (r.ok) {
       if (!values.quiet) console.log(`ok    ${r.ruleId}`);

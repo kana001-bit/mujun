@@ -7,6 +7,7 @@ const recommended: Record<string, RuleSetting> = {
   "er/duplicate-entity": "error",
   "er/isolated-entity": "warn",
   "prose/column-ref": "error",
+  "er/enum-table": "error",
   "ref/section": "error",
   "list/numbering": "error",
   "markdown/json-block": "error",

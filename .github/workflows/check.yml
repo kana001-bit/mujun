@@ -1,0 +1,26 @@
+# PR と main への push で `pnpm check`（typecheck → ESLint・Prettier → test → selftest）と build を回す。
+# ローカルの「作業の最後に pnpm check」と同じもの（AGENTS.md）。Windows でも使うので両方で走らせる。
+name: check
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  check:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4 # バージョンは package.json の packageManager から
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24 # engines.node の下限で確かめる
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm check
+      - run: pnpm build

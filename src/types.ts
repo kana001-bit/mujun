@@ -96,10 +96,21 @@ export type RuleContext<Options> = {
 };
 
 // ルールを落とすはずの壊れた例。selftest は「invalid が必ず落ちる」「valid は通る」を確かめる。
-// files はパス → Markdown。options は defaultOptions に上書きで混ぜる。
-export type RuleCase<Options> = {
+// options は、そのルールの設定（無ければ defaultOptions）に上書きで混ぜる。
+export type RuleCase<Options> = FileCase<Options> | MutationCase<Options>;
+
+// 小さな例文で壊す。files はパス → Markdown
+export type FileCase<Options> = {
   name: string;
   files: Record<string, string>;
+  options?: Partial<Options>;
+};
+
+// 実物の設計書を書き換えて壊す。selftest は設定ファイルの files を読み、mutate を当ててから走らせる。
+// 書き換えが何も変えなかったら（元の文言が変わって置換が当たらない）、それも失敗として報告する
+export type MutationCase<Options> = {
+  name: string;
+  mutate: Record<string, (text: string) => string>;
   options?: Partial<Options>;
 };
 

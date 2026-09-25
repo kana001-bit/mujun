@@ -98,3 +98,27 @@ export const buildErModel = (docs: Doc[]): ErModel => {
   }
   return { diagrams, entities, relations: diagrams.flatMap((d) => d.relations), errors };
 };
+
+// 列コメントに書いた列挙値。「a / b / c」の並びのうち一番長いものを読む。
+// 「D27: a / b」「a / b（補足）。説明」のように前後に何があってもよい。値は snake_case でも PascalCase でもよい
+export const enumValues = (comment: string): string[] => {
+  const runs = comment.match(/[A-Za-z][A-Za-z0-9_]*(?:\s*\/\s*[A-Za-z][A-Za-z0-9_]*)+/g) ?? [];
+  const longest = runs.reduce((a, b) => (b.split("/").length > a.split("/").length ? b : a), "");
+  return longest === "" ? [] : longest.split("/").map((v) => v.trim());
+};
+
+// 表のセルに書いた値。`a` `b` のようにバッククォートがあればそれだけ、無ければ a / b や a、b を切る
+export const cellValues = (cell: string): string[] => {
+  const quoted = [...cell.matchAll(/`([^`]+)`/g)].map((m) => m[1] ?? "");
+  if (quoted.length > 0) return quoted;
+  return cell
+    .split(/[\s/、,]+/)
+    .map((v) => v.trim())
+    .filter((v) => /^[a-z][a-z0-9_]*$/.test(v));
+};
+
+// `TABLE.column` の属性を探す
+export const findAttr = (model: ErModel, ref: string): Attr | undefined => {
+  const [table, column] = ref.split(".");
+  return model.entities.get(table ?? "")?.attrs.find((a) => a.name === column);
+};
