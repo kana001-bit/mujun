@@ -1,6 +1,6 @@
 {
   "name": "mujun",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Design-doc linter that finds contradictions (矛盾) between diagrams, tables and prose in Markdown design documents",
   "type": "module",
   "license": "MIT",
