@@ -113,3 +113,29 @@ test("selftest: 何も検査しないルールは失敗扱いになる", () => {
     ],
   );
 });
+
+test("selftest: mutate の例は実物を書き換えて走らせ、書き換えが当たらなければ失敗扱いになる", () => {
+  const rule = defineRule({
+    id: "test/no-todo",
+    description: "TODO を残さない",
+    defaultOptions: undefined,
+    check({ project, report }) {
+      for (const d of project.docs)
+        if (d.text.includes("TODO")) report({ doc: d, message: "TODO" });
+    },
+    invalid: [
+      { name: "TODO を足す", mutate: { "a.md": (t) => t.replace("完了", "TODO") } },
+      { name: "当たらない置換", mutate: { "a.md": (t) => t.replace("存在しない", "TODO") } },
+      { name: "設定に無いファイル", mutate: { "b.md": (t) => `${t}TODO` } },
+    ],
+  });
+  const project = { files: new Map([["a.md", "# 完了\n"]]), options: new Map() };
+  const [withProject] = selftest([rule], project);
+  assert.deepEqual(withProject?.messages, [
+    "invalid「当たらない置換」: mutate が a.md を変えなかった（元の文言が変わった？）",
+    "invalid「設定に無いファイル」: mutate の対象 b.md が設定の files に無い",
+  ]);
+  // 設定ファイルが無ければ、mutate の例は確かめられない
+  const [withoutProject] = selftest([rule]);
+  assert.equal(withoutProject?.ok, false);
+});

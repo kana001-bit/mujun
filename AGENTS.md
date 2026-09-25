@@ -19,7 +19,7 @@
 - `src/er.ts`：erDiagram を自前で解析する（Mermaid の公式パーサーは DOM が要るため使わない）
 - `src/engine.ts`：Project を組み立て、ルールを走らせる
 - `src/config.ts`：`mujun.config.ts` を探して読む
-- `src/selftest.ts`：各ルールの `invalid` / `valid` を走らせる
+- `src/selftest.ts`：各ルールの `invalid` / `valid` を走らせる。`mutate` の例は、設定ファイルの `files`（実物の設計書）を書き換えて走らせる
 - `src/rules/`：組み込みルール。`index.ts` が一覧、`recommended.ts` が既定のセット
 
 Node は `node_modules` の中の `.ts` を読めない。そのため npm に出すときは `pnpm build` で `dist/` に出力する。開発中は `src/*.ts` をそのまま実行する。
@@ -43,12 +43,12 @@ Node は `node_modules` の中の `.ts` を読めない。そのため npm に�
 
 `pnpm check`（typecheck → ESLint・Prettier → test → selftest）が落とすものは、レビューで見なくてよい。
 
-| 誰が                                             | 何を                                                                                            |
-| ------------------------------------------------ | ----------------------------------------------------------------------------------------------- |
-| `pnpm typecheck` / ESLint（`strictTypeChecked`） | 型、`any`、await 忘れ、`switch` の網羅、`==`、`console`                                         |
-| `pnpm selftest`                                  | 全ルールに `invalid` があること、`invalid` で**何かしら**報告すること、`valid` で報告しないこと |
-| `test/core.test.ts`                              | 組み込みルールが全部 selftest を通ること                                                        |
-| `test/conventions.test.ts`                       | テストファイルの先頭行に `// 守る仕様: 〜` があること                                           |
+| 誰が                                             | 何を                                                                                                                                   |
+| ------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm typecheck` / ESLint（`strictTypeChecked`） | 型、`any`、await 忘れ、`switch` の網羅、`==`、`console`                                                                                |
+| `pnpm selftest`                                  | 全ルールに `invalid` があること、`invalid` で**何かしら**報告すること、`valid` で報告しないこと、`mutate` の書き換えが実物に当たること |
+| `test/core.test.ts`                              | 組み込みルールが全部 selftest を通ること                                                                                               |
+| `test/conventions.test.ts`                       | テストファイルの先頭行に `// 守る仕様: 〜` があること                                                                                  |
 
 まだ機械が見ていないもの（レビューが見る。`/review-checklist`）:
 

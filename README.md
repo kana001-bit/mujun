@@ -52,20 +52,39 @@ Node 24 以上が必要です。設定ファイルもローカルのルールも
 - 正しい例（`valid`）で落ちた
 - 壊れた例が1つも書かれていない
 
+壊れた例の書き方は2通りあります。
+
+- **`files`**：小さな例文を書く。組み込みルールはこちら
+- **`mutate`**：実物の設計書を書き換えて壊す。プロジェクト固有のルールは、実物の構造（構成表や図の並び）を前提にすることが多いので、例文を作るより実物を壊すほうが短く書けて確かです
+
+```ts
+invalid: [
+  {
+    name: "記録時刻を消す",
+    mutate: { "docs/er.md": (t) => t.replace('        datetime recorded_at\n', "") },
+  },
+],
+```
+
+`mutate` の例は、設定ファイルの `files` を読み、書き換えてからルールを走らせます。元から出ている報告は数えず、書き換えで新しく出た報告があれば「落ちた」とみなします。書き換えが何も変えなかったとき（設計書の文言が変わって置換が当たらないとき）は、それ自体を失敗として報告します。
+
 ## ルール
 
-| ルール                | recommended | 見ること                                                     |
-| --------------------- | ----------- | ------------------------------------------------------------ |
-| `mermaid/er-syntax`   | error       | erDiagram の行が ER 図の文法として読める                     |
-| `er/relation-fk`      | error       | 図の線と FK 列が1対1で対応している                           |
-| `er/duplicate-entity` | error       | 同じエンティティを属性つきで2か所に定義していない            |
-| `er/isolated-entity`  | warn        | どの線にも出てこないエンティティが無い                       |
-| `prose/column-ref`    | error       | 本文の `` `TABLE.column` `` と `` `TABLE` `` が図に実在する  |
-| `ref/section`         | error       | 本文の `§N.N` が、同じ文書に実在する節を指している           |
-| `ref/id`              | —           | `D12` のような ID の参照先が定義されている（形は設定で渡す） |
-| `list/numbering`      | error       | 番号付きリストに欠番や重複が無い                             |
-| `markdown/json-block` | error       | json のコードブロックが JSON として読める                    |
-| `prose/duplicate`     | warn        | 同じ主張を2つの節に書いていない                              |
+| ルール                   | recommended | 見ること                                                       |
+| ------------------------ | ----------- | -------------------------------------------------------------- |
+| `mermaid/er-syntax`      | error       | erDiagram の行が ER 図の文法として読める                       |
+| `er/relation-fk`         | error       | 図の線と FK 列が1対1で対応している                             |
+| `er/duplicate-entity`    | error       | 同じエンティティを属性つきで2か所に定義していない              |
+| `er/isolated-entity`     | warn        | どの線にも出てこないエンティティが無い                         |
+| `prose/column-ref`       | error       | 本文の `` `TABLE.column` `` と `` `TABLE` `` が図に実在する    |
+| `er/enum-table`          | error       | 列挙表に書いた値と、列コメントの値（`a / b / c`）が一致する    |
+| `state/transition-table` | —           | 状態の列挙と遷移表が一致し、どの状態にも初期状態から辿り着ける |
+| `count/declared`         | —           | 本文で宣言した数（「集約 7 種」）と、数えた数が一致する        |
+| `ref/section`            | error       | 本文の `§N.N` が、同じ文書に実在する節を指している             |
+| `ref/id`                 | —           | `D12` のような ID の参照先が定義されている（形は設定で渡す）   |
+| `list/numbering`         | error       | 番号付きリストに欠番や重複が無い                               |
+| `markdown/json-block`    | error       | json のコードブロックが JSON として読める                      |
+| `prose/duplicate`        | warn        | 同じ主張を2つの節に書いていない                                |
 
 ### `er/relation-fk`
 
@@ -92,6 +111,68 @@ FK 列がどのエンティティを指すかは、次の順で決めます。
 | `requireRelationForFk` | `true`                | 「FK 列はあるのに線が無い」も報告する                |
 
 親と子は、線を書いた左右ではなく多重度で決めます。`ORDER }o--|| USER` と書いても、親は `USER` です。
+
+### `prose/column-ref`
+
+本文のインラインコード `` `TABLE.column` `` と `` `TABLE` `` が、ER図に実在するかを見ます。図を直したのに本文が古いまま、を拾います。
+
+| オプション      | 既定値                                          | 意味                                                                        |
+| --------------- | ----------------------------------------------- | --------------------------------------------------------------------------- |
+| `entityPattern` | `"[A-Z][A-Z0-9_]*"`                             | エンティティ名とみなす形                                                    |
+| `bareEntity`    | `"underscore"`                                  | 列なしの `` `TABLE` `` を見る範囲。`underscore` は下線を含む名前だけ        |
+| `strictFiles`   | `[]`                                            | `bareEntity` に関わらず、列なしの名前を全部見る文書（ER図を書いた文書など） |
+| `allow`         | `["PK", "FK", "UK", "NULL", "TABLE", "ENTITY"]` | 見ない名前                                                                  |
+| `ignoreFiles`   | `[]`                                            | 見ない文書（glob）                                                          |
+
+`bareEntity` の既定が `underscore` なのは、`` `API` `` のような略語をテーブル名と取り違えないためです。
+
+### `er/enum-table`
+
+列挙の値を、ER図の列コメント（`"a / b / c"`）と列挙表の2か所に書くと、片方だけ直したときに食い違います。見出しが `| 列 | 値 |` で始まる表（`header` で変えられます）の各行について、1列目の `` `TABLE.column` `` の列コメントと、2列目の値が一致するかを見ます。1行に複数の列を並べれば、それらの語彙が揃っているかも見ます。
+
+```md
+| 列                        | 値                 |
+| ------------------------- | ------------------ |
+| `ORDER.status`            | `draft` `placed`   |
+| `PLAN.kind` `ACTUAL.kind` | `material` `labor` |
+```
+
+### `state/transition-table`
+
+状態を持つ列を設定で渡すと、その列コメントの値と、見出しに「遷移元」と「遷移先」（または `from` と `to`）を含む表を突き合わせます。
+
+- 列挙にある状態が、遷移表に無い
+- 遷移表にある状態が、列挙に無い（綴り違い）
+- 初期状態から辿り着けない状態がある。初期状態は、遷移元が空の行（「（作成） | — | `draft`」）の行き先
+
+```ts
+"state/transition-table": ["error", {
+  machines: [{ state: "ORDER.status", event: "ORDER_EVENT.event_type" }],
+}],
+```
+
+`event` を渡すと、イベントの列挙が遷移表の1列目に全部出てくるかも見ます。
+
+### `count/declared`
+
+「集約 7 種」「24 テーブル」のような宣言と、実際に数えた数を突き合わせます。宣言の書き方はプロジェクトごとに違うので、形を設定で渡します。
+
+```ts
+"count/declared": ["error", {
+  declarations: [
+    {
+      name: "集約",
+      pattern: String.raw`集約 (\d+) 種`,
+      of: { tableRows: ["集約", "中身"], file: "docs/design.md" },
+    },
+    { name: "テーブル", pattern: String.raw`(\d+) テーブル`, of: { entities: true } },
+  ],
+}],
+```
+
+数える対象（`of`）は、ER図のエンティティ（`entities`）、見出し行で探した表の行数（`tableRows`）、見出しの数（`headings`）のどれかです。
+
+宣言の文言を変えると、正規表現が何にも当たらなくなり、検査が黙って通り続けます。なので、宣言が1つも見つからないときと、数える対象が見つからないときも報告します。
 
 ### `ref/id`
 
