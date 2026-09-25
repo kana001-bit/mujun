@@ -1,0 +1,63 @@
+{
+  "name": "mujun",
+  "version": "0.0.0",
+  "description": "Design-doc linter that finds contradictions (矛盾) between diagrams, tables and prose in Markdown design documents",
+  "type": "module",
+  "license": "MIT",
+  "engines": {
+    "node": ">=24"
+  },
+  "packageManager": "pnpm@12.6.0",
+  "bin": {
+    "mujun": "./dist/cli.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./recommended": {
+      "types": "./dist/rules/recommended.d.ts",
+      "default": "./dist/rules/recommended.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "mujun": "node src/cli.ts",
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json",
+    "lint": "eslint . && prettier --check .",
+    "format": "prettier --write . && eslint --fix .",
+    "test": "node --test \"test/**/*.test.ts\"",
+    "selftest": "node src/cli.ts selftest",
+    "check": "pnpm typecheck && pnpm lint && pnpm test && pnpm selftest"
+  },
+  "dependencies": {
+    "mdast-util-from-markdown": "^2.0.3",
+    "mdast-util-gfm-table": "^2.0.0",
+    "micromark-extension-gfm-table": "^2.1.2"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/mdast": "^4.0.4",
+    "@types/node": "^24.13.6",
+    "eslint": "^10.11.0",
+    "prettier": "^3.9.9",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.70.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kana001-bit/mujun.git"
+  },
+  "keywords": [
+    "lint",
+    "linter",
+    "markdown",
+    "mermaid",
+    "er-diagram",
+    "design-doc"
+  ]
+}
