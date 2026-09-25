@@ -1,6 +1,6 @@
 {
   "name": "mujun",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Design-doc linter that finds contradictions (矛盾) between diagrams, tables and prose in Markdown design documents",
   "type": "module",
   "license": "MIT",
@@ -32,7 +32,9 @@
     "format": "prettier --write . && eslint --fix .",
     "test": "node --test \"test/**/*.test.ts\"",
     "selftest": "node src/cli.ts selftest",
-    "check": "pnpm typecheck && pnpm lint && pnpm test && pnpm selftest"
+    "check": "pnpm typecheck && pnpm lint && pnpm test && pnpm selftest",
+    "prepack": "pnpm build",
+    "prepublishOnly": "pnpm check"
   },
   "dependencies": {
     "mdast-util-from-markdown": "^2.0.3",

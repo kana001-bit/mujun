@@ -22,7 +22,7 @@
 - `src/selftest.ts`：各ルールの `invalid` / `valid` を走らせる。`mutate` の例は、設定ファイルの `files`（実物の設計書）を書き換えて走らせる
 - `src/rules/`：組み込みルール。`index.ts` が一覧、`recommended.ts` が既定のセット
 
-Node は `node_modules` の中の `.ts` を読めない。そのため npm に出すときは `pnpm build` で `dist/` に出力する。開発中は `src/*.ts` をそのまま実行する。
+Node は `node_modules` の中の `.ts` を読めない。そのため npm に出すものは `dist/` に出力する。`npm pack` / `npm publish` の前に `prepack` が `pnpm build` を走らせる。開発中は `src/*.ts` をそのまま実行する。
 
 ## 実装の約束
 
