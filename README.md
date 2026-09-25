@@ -3,7 +3,7 @@
 > mujun（矛盾）= contradiction
 
 > [!NOTE]
-> 開発中（0.x）です。ルールや設定の形は変わることがあります。npm にはまだ公開していません。
+> 開発中（0.x）です。ルールや設定の形は変わることがあります。
 
 Markdown で書いた設計書の中の矛盾を見つける Linter です。見るのは、ER 図・表・本文のあいだの食い違いです。
 
@@ -248,5 +248,5 @@ export default defineRule({
 ```sh
 pnpm install
 pnpm check   # typecheck / lint / test / selftest
-pnpm build   # dist/ に出力（npm に出すとき用）
+pnpm build   # dist/ に出力（npm pack / publish のときは prepack が自動で走らせる）
 ```
