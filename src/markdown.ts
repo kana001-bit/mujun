@@ -3,7 +3,16 @@ import type { Nodes, Root } from "mdast";
 import { fromMarkdown } from "mdast-util-from-markdown";
 import { gfmTableFromMarkdown } from "mdast-util-gfm-table";
 import { gfmTable } from "micromark-extension-gfm-table";
-import type { CodeSpan, Doc, Heading, MermaidBlock, Table } from "./types.ts";
+import type {
+  CodeBlock,
+  CodeSpan,
+  Doc,
+  Heading,
+  MermaidBlock,
+  OrderedList,
+  Paragraph,
+  Table,
+} from "./types.ts";
 
 const plain = (n: Nodes): string => {
   if ("value" in n) return n.value;
@@ -24,7 +33,11 @@ export const parseDoc = (path: string, text: string): Doc => {
   const mermaid: MermaidBlock[] = [];
   const tables: Table[] = [];
   const codeSpans: CodeSpan[] = [];
+  const codeBlocks: CodeBlock[] = [];
+  const orderedLists: OrderedList[] = [];
+  const paragraphs: Paragraph[] = [];
   let head = "";
+  let quoted = 0;
 
   // 文書順に歩く。見出しは入れ子にならないので、出会った順に head を更新すればよい
   const walk = (n: Nodes): void => {
@@ -34,6 +47,13 @@ export const parseDoc = (path: string, text: string): Doc => {
         headings.push({ depth: n.depth, text: head, line: lineOf(n) });
         return;
       case "code":
+        codeBlocks.push({
+          lang: n.lang ?? "",
+          value: n.value,
+          line: lineOf(n) + 1,
+          endLine: n.position?.end.line ?? 0,
+          head,
+        });
         if (n.lang === "mermaid") {
           const body = n.value.split("\n");
           mermaid.push({
@@ -44,6 +64,31 @@ export const parseDoc = (path: string, text: string): Doc => {
           });
         }
         return;
+      case "paragraph":
+        paragraphs.push({
+          text: plain(n),
+          raw: raw(n),
+          line: lineOf(n),
+          head,
+          quoted: quoted > 0,
+        });
+        break;
+      case "blockquote":
+        quoted++;
+        for (const c of n.children) walk(c);
+        quoted--;
+        return;
+      case "list":
+        if (n.ordered === true) {
+          orderedLists.push({
+            line: lineOf(n),
+            items: n.children.map((item) => ({
+              number: Number(/^\s*(\d+)/.exec(raw(item))?.[1] ?? Number.NaN),
+              line: lineOf(item),
+            })),
+          });
+        }
+        break;
       case "inlineCode":
         codeSpans.push({ value: n.value, line: lineOf(n) });
         return;
@@ -67,7 +112,24 @@ export const parseDoc = (path: string, text: string): Doc => {
   };
   walk(tree);
 
-  return { path, text, headings, mermaid, tables, codeSpans };
+  return {
+    path,
+    text,
+    headings,
+    mermaid,
+    tables,
+    codeSpans,
+    codeBlocks,
+    orderedLists,
+    paragraphs,
+  };
+};
+
+// コードブロックの外の行。コードブロックの行は空文字にして、行番号を保つ
+export const proseLines = (doc: Doc): { text: string; line: number }[] => {
+  const lines = doc.text.split("\n");
+  for (const b of doc.codeBlocks) lines.fill("", Math.max(b.line - 2, 0), b.endLine);
+  return lines.map((text, i) => ({ text, line: i + 1 }));
 };
 
 // 見出し行が header（先頭から順に一致）で始まる表を探す

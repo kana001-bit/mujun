@@ -7,6 +7,11 @@ const recommended: Record<string, RuleSetting> = {
   "er/duplicate-entity": "error",
   "er/isolated-entity": "warn",
   "prose/column-ref": "error",
+  "ref/section": "error",
+  "list/numbering": "error",
+  "markdown/json-block": "error",
+  // 似ているだけの文も拾うので warn
+  "prose/duplicate": "warn",
 };
 
 export default recommended;

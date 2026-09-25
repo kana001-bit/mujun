@@ -54,13 +54,18 @@ Node 24 以上が必要です。設定ファイルもローカルのルールも
 
 ## ルール
 
-| ルール                | recommended | 見ること                                                    |
-| --------------------- | ----------- | ----------------------------------------------------------- |
-| `mermaid/er-syntax`   | error       | erDiagram の行が ER 図の文法として読める                    |
-| `er/relation-fk`      | error       | 図の線と FK 列が1対1で対応している                          |
-| `er/duplicate-entity` | error       | 同じエンティティを属性つきで2か所に定義していない           |
-| `er/isolated-entity`  | warn        | どの線にも出てこないエンティティが無い                      |
-| `prose/column-ref`    | error       | 本文の `` `TABLE.column` `` と `` `TABLE` `` が図に実在する |
+| ルール                | recommended | 見ること                                                     |
+| --------------------- | ----------- | ------------------------------------------------------------ |
+| `mermaid/er-syntax`   | error       | erDiagram の行が ER 図の文法として読める                     |
+| `er/relation-fk`      | error       | 図の線と FK 列が1対1で対応している                           |
+| `er/duplicate-entity` | error       | 同じエンティティを属性つきで2か所に定義していない            |
+| `er/isolated-entity`  | warn        | どの線にも出てこないエンティティが無い                       |
+| `prose/column-ref`    | error       | 本文の `` `TABLE.column` `` と `` `TABLE` `` が図に実在する  |
+| `ref/section`         | error       | 本文の `§N.N` が、同じ文書に実在する節を指している           |
+| `ref/id`              | —           | `D12` のような ID の参照先が定義されている（形は設定で渡す） |
+| `list/numbering`      | error       | 番号付きリストに欠番や重複が無い                             |
+| `markdown/json-block` | error       | json のコードブロックが JSON として読める                    |
+| `prose/duplicate`     | warn        | 同じ主張を2つの節に書いていない                              |
 
 ### `er/relation-fk`
 
@@ -87,6 +92,37 @@ FK 列がどのエンティティを指すかは、次の順で決めます。
 | `requireRelationForFk` | `true`                | 「FK 列はあるのに線が無い」も報告する                |
 
 親と子は、線を書いた左右ではなく多重度で決めます。`ORDER }o--|| USER` と書いても、親は `USER` です。
+
+### `ref/id`
+
+設計判断の番号（D1, D2 …）のように、プロジェクトごとに形が違う ID を見ます。形を設定で渡さないと何もしないので、recommended には入れていません。
+
+```ts
+"ref/id": ["error", {
+  ids: [
+    // 参照は本文のどこでも、定義は見出し「D12. 〜」
+    { name: "設計判断", ref: String.raw`\bD(\d+)\b`, def: String.raw`^D(\d+)\.` },
+    // 定義は表の1列目「U3」
+    { name: "未決事項", ref: String.raw`\bU(\d+)\b`, def: String.raw`^U(\d+)$` },
+  ],
+  ignoreFiles: ["docs/design-history.md"],
+}],
+```
+
+`def` は、すべての文書の見出しと、表の各行の1列目に当てます。
+
+### `prose/duplicate`
+
+同じ主張を2か所に書くと、片方だけ直したときに矛盾が生まれます。このルールは、文を5文字ずつの断片に分け、節をまたいで重なりの割合（Jaccard 係数）を比べます。
+
+| オプション    | 既定値       | 意味                                         |
+| ------------- | ------------ | -------------------------------------------- |
+| `threshold`   | `0.4`        | これ以上重なっていれば報告する               |
+| `minLength`   | `18`         | 記号を除いてこれより短い文は比べない         |
+| `scope`       | `"document"` | `"project"` にすると、文書をまたいでも比べる |
+| `ignoreFiles` | `[]`         | 見ない文書（glob）                           |
+
+引用（`>`）の中と、太字だけの行（見出しの代わり）は比べません。
 
 ## プロジェクト固有のルール
 

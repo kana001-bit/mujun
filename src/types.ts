@@ -14,6 +14,21 @@ export type TableRow = { cells: string[]; line: number };
 // 本文（コードブロックの外）のインラインコード `x`
 export type CodeSpan = { value: string; line: number };
 
+// コードブロック。line は本文 1 行目、endLine はブロックの最後の行（閉じフェンス）の行番号
+export type CodeBlock = {
+  lang: string;
+  value: string;
+  line: number;
+  endLine: number;
+  head: string;
+};
+
+// 番号付きリスト。number は書いた番号そのもの（Markdown の自動採番に直さない）
+export type OrderedList = { line: number; items: { number: number; line: number }[] };
+
+// 段落。text は書式を落とした文字列、raw は元の文字列。quoted は引用（>）の中
+export type Paragraph = { text: string; raw: string; line: number; head: string; quoted: boolean };
+
 export type Doc = {
   path: string; // config のあるディレクトリからの相対パス（/ 区切り）
   text: string;
@@ -21,6 +36,9 @@ export type Doc = {
   mermaid: MermaidBlock[];
   tables: Table[];
   codeSpans: CodeSpan[];
+  codeBlocks: CodeBlock[];
+  orderedLists: OrderedList[];
+  paragraphs: Paragraph[];
 };
 
 export type Attr = {
