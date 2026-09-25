@@ -69,9 +69,10 @@ export default defineRule<Options>({
 
     // 線 → FK
     const edges = new Set<string>();
+    const ambiguous: typeof relations = [];
     for (const r of relations) {
-      edges.add(`${r.parent}->${r.child}`);
-      if (r.ambiguous) edges.add(`${r.child}->${r.parent}`);
+      if (r.ambiguous && r.parent !== r.child) ambiguous.push(r);
+      else edges.add(`${r.parent}->${r.child}`);
       const child = entities.get(r.child);
       const parent = entities.get(r.parent);
       // 属性を書いていない端は検査できない（俯瞰図だけに出る名前など）
@@ -86,6 +87,24 @@ export default defineRule<Options>({
         });
       }
     }
+
+    // 1:1・多:多の線（ambiguous）は向きが決まらないが、1 本が満たす FK は 1 方向だけ。
+    // A |o--o| B の 1 本で A.b_id と B.a_id の両方を通すと、もう 1 本の線を消しても気づかない。
+    // 書いた向き（左が親）の FK がまだ線を持たなければそれに、そうでなければ逆向きに割り当てる
+    const needed = new Set<string>();
+    for (const e of entities.values()) {
+      for (const a of e.attrs) {
+        const t = a.keys.has("FK") ? targetOf(e, a) : undefined;
+        if (t !== undefined) needed.add(`${t}->${e.name}`);
+      }
+    }
+    const rest: typeof relations = [];
+    for (const r of ambiguous) {
+      const written = `${r.parent}->${r.child}`;
+      if (needed.has(written) && !edges.has(written)) edges.add(written);
+      else rest.push(r);
+    }
+    for (const r of rest) edges.add(`${r.child}->${r.parent}`);
 
     // FK → 線
     for (const e of entities.values()) {
@@ -144,6 +163,23 @@ export default defineRule<Options>({
         ].join("\n"),
       },
     },
+    {
+      name: "1 対 1 の線 1 本で、互いを指す 2 つの FK を通している",
+      files: {
+        "er.md": [
+          "| FK 列 | 参照先 |",
+          "| --- | --- |",
+          "| `chosen_quote_id` | `QUOTE` |",
+          "",
+          "```mermaid",
+          "erDiagram",
+          "  JOB {\n    int id PK\n    int chosen_quote_id FK\n  }",
+          "  QUOTE {\n    int id PK\n    int job_id FK\n  }",
+          "  QUOTE |o--o| JOB : chosen",
+          "```",
+        ].join("\n"),
+      },
+    },
   ],
   valid: [
     {
@@ -165,6 +201,27 @@ export default defineRule<Options>({
           "  ORDER }o--|| USER : places",
           "  ORDER ||--|{ ORDER_LINE : has",
           "  CATEGORY ||--o{ CATEGORY : parent",
+          "```",
+        ].join("\n"),
+      },
+    },
+    {
+      name: "1 対 1 の線は、書いた向きと逆の側の FK にも対応できる。互いを指す FK には線を 2 本引く",
+      files: {
+        "er.md": [
+          "| FK 列 | 参照先 |",
+          "| --- | --- |",
+          "| `chosen_quote_id` | `QUOTE` |",
+          "",
+          "```mermaid",
+          "erDiagram",
+          "  USER {\n    int id PK\n    int profile_id FK\n  }",
+          "  PROFILE {\n    int id PK\n  }",
+          "  JOB {\n    int id PK\n    int chosen_quote_id FK\n  }",
+          "  QUOTE {\n    int id PK\n    int job_id FK\n  }",
+          "  USER |o--o| PROFILE : has",
+          "  JOB ||--o{ QUOTE : drafts",
+          "  QUOTE |o--o| JOB : chosen",
           "```",
         ].join("\n"),
       },
