@@ -6,6 +6,7 @@
   "private": true,
   "publisher": "kana001-bit",
   "license": "MIT",
+  "icon": "icon.png",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/kana001-bit/mujun.git",

@@ -48,7 +48,7 @@ npx mujun selftest   # 各ルールが、自分の壊れた例で本当に落ち
 
 Node 24 以上が必要です。設定ファイルもローカルのルールも `.ts` のまま読み込むので、ビルドは要りません。
 
-VS Code 拡張を準備中です（[vscode/](https://github.com/kana001-bit/mujun/tree/main/vscode)）。入れると、設計書を保存するたびに指摘が「問題」パネルと波線に出ます。拡張はプロジェクトに入れた mujun（0.2.0 以上）を走らせるので、CLI や CI と同じ結果になります。
+VS Code では、拡張機能で「mujun」と検索して入れられます（[Marketplace](https://marketplace.visualstudio.com/items?itemName=kana001-bit.mujun-vscode)、[ソース](https://github.com/kana001-bit/mujun/tree/main/vscode)）。入れると、設計書を保存するたびに指摘が「問題」パネルと波線に出ます。拡張はプロジェクトに入れた mujun（0.2.0 以上）を走らせるので、CLI や CI と同じ結果になります。
 
 ### `--format json`
 
