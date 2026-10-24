@@ -3,7 +3,7 @@
 version: 2
 updates:
   - package-ecosystem: npm # pnpm の lockfile もこれで読む
-    directory: /
+    directories: ["/", "/vscode"] # vscode/ は VS Code 拡張（pnpm のワークスペース）
     schedule:
       interval: monthly
     # 出たばかりの版は 7 日待つ。乗っ取られた版が公開されてすぐ取り下げられる、を踏まないため
@@ -20,6 +20,9 @@ updates:
       # https://github.com/typescript-eslint/typescript-eslint/issues/10940
       - dependency-name: "typescript"
         update-types: ["version-update:semver-major"]
+      # 拡張の engines.vscode（^1.100.0）に合わせている。上げると、1.100 に無い API でも型が通ってしまう
+      - dependency-name: "@types/vscode"
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
 
   - package-ecosystem: github-actions
     directory: /

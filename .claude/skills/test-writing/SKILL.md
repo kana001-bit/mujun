@@ -16,7 +16,7 @@ description: mujun のテスト（test/*.test.ts）やルールの invalid / val
 | --------------------------------------------- | ------------------------------------------------------- |
 | ルールが拾うべきもの・拾ってはいけないもの    | ルール自身の `invalid` / `valid`（selftest が走らせる） |
 | 解析（Markdown・erDiagram）の結果の形、行番号 | `test/*.test.ts`                                        |
-| エンジン・config・selftest そのものの振る舞い | `test/*.test.ts`                                        |
+| エンジン・config・selftest・CLI の振る舞い    | `test/*.test.ts`（拡張は `vscode/test/*.test.ts`）      |
 
 ルールの振る舞いを `test/` に書かない。`invalid` / `valid` は、そのままルールの使い方の例にもなる。
 ただし「報告のメッセージや行番号まで固定したい」ときは `test/` に書いてよい（selftest は件数しか見ないため）。

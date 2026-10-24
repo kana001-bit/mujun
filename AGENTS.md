@@ -21,6 +21,7 @@
 - `src/config.ts`：`mujun.config.ts` を探して読む
 - `src/selftest.ts`：各ルールの `invalid` / `valid` を走らせる。`mutate` の例は、設定ファイルの `files`（実物の設計書）を書き換えて走らせる
 - `src/rules/`：組み込みルール。`index.ts` が一覧、`recommended.ts` が既定のセット
+- `vscode/`：VS Code 拡張（pnpm のワークスペース。版は mujun と別）。mujun を同梱せず、プロジェクトの `node_modules/mujun` の CLI を `--format json` で走らせる。利用者の `mujun.config.ts` と独自ルールは `.ts` のまま読まれるので Node 24 が要り、VS Code の Node では読めないことがあるため。CLI・CI と同じ版で同じ結果になる
 
 Node は `node_modules` の中の `.ts` を読めない。そのため npm に出すものは `dist/` に出力する。`npm pack` / `npm publish` の前に `prepack` が `pnpm build` を走らせる。開発中は `src/*.ts` をそのまま実行する。
 
@@ -29,6 +30,7 @@ Node は `node_modules` の中の `.ts` を読めない。そのため npm に�
 - ルールは `Project` を読んで `report` するだけ。ファイルを読まない、`console` に書かない、`process` に触らない。I/O は `cli.ts` と `config.ts` だけ
 - `report` には `doc` と `line` を付ける。メッセージには、何と何が食い違っているかを実際の値で書く（例: `番号が 1・2・4（期待 1・2・3）`）
 - ルールの ID は `<分類>/<名前>`。一度出した ID と option 名は、利用者の設定ファイルに書かれるので変えない
+- `--format json` のキーと終了コード（0 指摘なし・warn だけ、1 error あり、2 走らせられなかった）は拡張や利用者のツールが読むので変えない。形を変えるなら `version` を上げる
 - ドキュメントとコメントは日本語、識別子は英語。コメントには「なぜ」を書く
 - 外部依存は増やさない。増やすなら、自前の実装より壊れにくくなるときだけ
 - コミットは求められたときだけ
@@ -36,19 +38,22 @@ Node は `node_modules` の中の `.ts` を読めない。そのため npm に�
 ## テストの約束
 
 - **テストは仕様を守るためにある。** ファイル先頭に `// 守る仕様: 〜` と書く。テスト名は仕様の文そのもの（例: `erDiagram: 多重度で親子を決め、属性の行番号を持つ`）。関数名や内部構造を名前にしない
-- ルールの振る舞いは、ルール自身の `invalid` / `valid` に書く。`test/` は解析・エンジン・selftest の土台を守る
+- ルールの振る舞いは、ルール自身の `invalid` / `valid` に書く。`test/` は解析・エンジン・selftest・CLI の出力の土台を守る
 - 詳しくは `/test-writing`
 
 ## 機械が守っているもの・守っていないもの
 
-`pnpm check`（typecheck → ESLint・Prettier → test → selftest）が落とすものは、レビューで見なくてよい。
+`pnpm check`（typecheck → ESLint・Prettier → test → selftest → 拡張のビルドとテスト）が落とすものは、レビューで見なくてよい。
 
 | 誰が                                             | 何を                                                                                                                                   |
 | ------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------- |
 | `pnpm typecheck` / ESLint（`strictTypeChecked`） | 型、`any`、await 忘れ、`switch` の網羅、`==`、`console`                                                                                |
 | `pnpm selftest`                                  | 全ルールに `invalid` があること、`invalid` で**何かしら**報告すること、`valid` で報告しないこと、`mutate` の書き換えが実物に当たること |
 | `test/core.test.ts`                              | 組み込みルールが全部 selftest を通ること                                                                                               |
-| `test/conventions.test.ts`                       | テストファイルの先頭行に `// 守る仕様: 〜` があること                                                                                  |
+| `test/conventions.test.ts`                       | テストファイル（`vscode/test/` も）の先頭行に `// 守る仕様: 〜` があること                                                             |
+| `test/cli.test.ts`                               | `--format json` の形と終了コード                                                                                                       |
+| `vscode/test/run.test.ts`                        | 拡張がプロジェクトの mujun を見つけ、`--format json` を読み違えないこと                                                                |
+| `vscode/test/extension.test.ts`                  | 拡張が、ファイルの削除・改名のあとに検査し直し、古いパスの指摘を消すこと                                                               |
 
 まだ機械が見ていないもの（レビューが見る。`/review-checklist`）:
 

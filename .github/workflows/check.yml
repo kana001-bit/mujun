@@ -1,4 +1,4 @@
-# PR と main への push で `pnpm check`（typecheck → ESLint・Prettier → test → selftest）と build を回す。
+# PR と main への push で `pnpm check`（typecheck → ESLint・Prettier → test → selftest → 拡張のビルドとテスト）と build を回す。
 # ローカルの「作業の最後に pnpm check」と同じもの（AGENTS.md）。Windows でも使うので両方で走らせる。
 name: check
 
