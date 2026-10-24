@@ -1,0 +1,28 @@
+# 版の更新は月 1 回、エコシステムごとに 1 本の PR にまとめる（毎週ばらばらに来ると読まなくなる）。
+# 脆弱性の修正（security updates）はこの設定と別に、見つかったときにすぐ PR が来る。
+version: 2
+updates:
+  - package-ecosystem: npm # pnpm の lockfile もこれで読む
+    directory: /
+    schedule:
+      interval: monthly
+    # 出たばかりの版は 7 日待つ。乗っ取られた版が公開されてすぐ取り下げられる、を踏まないため
+    cooldown:
+      default-days: 7
+    groups:
+      npm:
+        patterns: ["*"]
+    ignore:
+      # 型は engines（Node 24）に合わせている。上げると、Node 24 に無い API でも型が通ってしまう
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    cooldown:
+      default-days: 7
+    groups:
+      actions:
+        patterns: ["*"]
