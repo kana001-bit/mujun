@@ -1,0 +1,73 @@
+{
+  "name": "mujun-vscode",
+  "displayName": "mujun",
+  "description": "設計書（Markdown + Mermaid）の矛盾を、保存するたびに「問題」パネルに出す。プロジェクトに入れた mujun を走らせる",
+  "version": "0.1.0",
+  "private": true,
+  "publisher": "kana001-bit",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kana001-bit/mujun.git",
+    "directory": "vscode"
+  },
+  "engines": {
+    "vscode": "^1.100.0"
+  },
+  "categories": [
+    "Linters"
+  ],
+  "keywords": [
+    "markdown",
+    "mermaid",
+    "er-diagram",
+    "design-doc",
+    "lint"
+  ],
+  "main": "./out/src/extension.js",
+  "activationEvents": [
+    "workspaceContains:**/mujun.config.{ts,mjs,js}"
+  ],
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": false,
+      "description": "mujun.config.ts と独自ルールはプロジェクトのコードとして実行されるため、信頼したワークスペースでだけ走らせる"
+    }
+  },
+  "contributes": {
+    "commands": [
+      {
+        "command": "mujun.run",
+        "title": "検査する",
+        "category": "mujun"
+      },
+      {
+        "command": "mujun.showOutput",
+        "title": "出力を開く",
+        "category": "mujun"
+      }
+    ],
+    "configuration": {
+      "title": "mujun",
+      "properties": {
+        "mujun.nodePath": {
+          "type": "string",
+          "default": "node",
+          "scope": "machine",
+          "markdownDescription": "mujun を走らせる Node のパス。mujun は Node 24 以上が要る。PATH の `node` が古いときに指定する。実行するプログラムを差し替えられるので、ワークスペースの設定（`.vscode/settings.json`）では変えられない"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "build": "tsc -p .",
+    "test": "node --test \"out/test/**/*.test.js\"",
+    "check": "pnpm build && pnpm test",
+    "package": "pnpm build && pnpm dlx @vscode/vsce@4 package --no-dependencies"
+  },
+  "devDependencies": {
+    "@types/node": "^24.13.6",
+    "@types/vscode": "~1.100.0",
+    "typescript": "^6.0.3"
+  }
+}

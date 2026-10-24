@@ -36,11 +36,50 @@ export default defineConfig({
 ```
 
 ```sh
-npx mujun            # 検査。error が1件でもあれば終了コード 1
+npx mujun            # 検査。error が1件でもあれば終了コード 1、走らせられなかったら 2
 npx mujun selftest   # 各ルールが、自分の壊れた例で本当に落ちるかを確かめる
 ```
 
+| オプション              | 意味                                                                        |
+| ----------------------- | --------------------------------------------------------------------------- |
+| `-c`, `--config <path>` | 設定ファイル。省略すると、今のディレクトリから上に `mujun.config.ts` を探す |
+| `-q`, `--quiet`         | error だけを出す。問題が無いときは何も出さない（フック向け）                |
+| `-f`, `--format json`   | 結果を JSON で標準出力に出す（エディタ拡張などのツール向け。下記）          |
+
 Node 24 以上が必要です。設定ファイルもローカルのルールも `.ts` のまま読み込むので、ビルドは要りません。
+
+VS Code 拡張を準備中です（[vscode/](https://github.com/kana001-bit/mujun/tree/main/vscode)）。入れると、設計書を保存するたびに指摘が「問題」パネルと波線に出ます。拡張はプロジェクトに入れた mujun（0.2.0 以上）を走らせるので、CLI や CI と同じ結果になります。
+
+### `--format json`
+
+エディタ拡張などのツールが読むための形です。キーは今後も変えません（足すことはあります）。終了コードは text のときと同じです。
+
+- 0：指摘が無い、または warn だけ
+- 1：error が1件以上ある
+- 2：走らせられなかった（設定ファイルが読めない、引数が読めないなど）。標準出力には何も出さず、理由を標準エラーに出します
+
+`selftest` は `--format json` に対応していません（終了コード 2）。
+
+```json
+{
+  "version": 1,
+  "root": "/abs/path/to/project",
+  "files": ["docs/er.md", "docs/design.md"],
+  "problems": [
+    {
+      "ruleId": "list/numbering",
+      "severity": "error",
+      "message": "番号が 1・2・4（期待 1・2・3）",
+      "path": "docs/design.md",
+      "line": 5
+    }
+  ]
+}
+```
+
+- `root` は設定ファイルのあるディレクトリの絶対パスです。`files` と `path` は `root` からの相対パスで、`/` 区切りです
+- `files` は検査したファイルの一覧です。指摘が消えたファイルを知るのに使えます
+- `path` と `line` は、ルールによっては付きません
 
 ## selftest
 
@@ -249,6 +288,8 @@ export default defineRule({
 
 ```sh
 pnpm install
-pnpm check   # typecheck / lint / test / selftest
+pnpm check   # typecheck / lint / test / selftest / 拡張のビルドとテスト
 pnpm build   # dist/ に出力（npm pack / publish のときは prepack が自動で走らせる）
 ```
+
+`vscode/` は VS Code 拡張です（pnpm のワークスペース）。`pnpm check` は拡張のビルドとテストも走らせます。拡張の版は mujun とは別に上げます。

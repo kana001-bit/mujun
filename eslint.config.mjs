@@ -4,7 +4,7 @@ import { defineConfig } from "eslint/config";
 import tseslint from "typescript-eslint";
 
 export default defineConfig(
-  { ignores: ["dist/", "node_modules/", "eslint.config.mjs"] },
+  { ignores: ["dist/", "node_modules/", "vscode/out/", "eslint.config.mjs"] },
   eslint.configs.recommended,
   tseslint.configs.strictTypeChecked,
   tseslint.configs.stylisticTypeChecked,
@@ -29,7 +29,7 @@ export default defineConfig(
   },
   {
     // node:test の test() は Promise を返すが、待たなくてよい
-    files: ["test/**/*.ts"],
+    files: ["test/**/*.ts", "vscode/test/**/*.ts"],
     rules: {
       "@typescript-eslint/no-floating-promises": [
         "error",

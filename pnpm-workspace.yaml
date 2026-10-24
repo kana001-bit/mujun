@@ -1,0 +1,6 @@
+# ルートが npm の mujun、vscode/ が VS Code 拡張。版は別々に上げる
+packages:
+  - vscode
+allowBuilds:
+  "@vscode/vsce-sign": set this to true or false
+  keytar: set this to true or false
