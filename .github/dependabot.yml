@@ -16,6 +16,10 @@ updates:
       # 型は engines（Node 24）に合わせている。上げると、Node 24 に無い API でも型が通ってしまう
       - dependency-name: "@types/node"
         update-types: ["version-update:semver-major"]
+      # typescript-eslint が TS 7 に対応していない（ESLint が起動時に落ちる）。対応したらこの 2 行を消す
+      # https://github.com/typescript-eslint/typescript-eslint/issues/10940
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: github-actions
     directory: /
