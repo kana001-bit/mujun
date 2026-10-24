@@ -2,6 +2,10 @@
 
 設計書（Markdown + Mermaid）の中の矛盾を見つける Linter [mujun](https://github.com/kana001-bit/mujun) を、VS Code で使うための拡張です。設計書を保存するたびに検査し、指摘を「問題」パネルと波線に出します。
 
+## 入れ方
+
+VS Code の拡張機能で「mujun」と検索して入れます。[Marketplace のページ](https://marketplace.visualstudio.com/items?itemName=kana001-bit.mujun-vscode)からも入れられます。
+
 ## 必要なもの
 
 - プロジェクトに mujun 0.2.0 以上が入っていて、`mujun.config.ts`（または `.mjs` / `.js`）がある
