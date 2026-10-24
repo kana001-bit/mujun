@@ -36,6 +36,9 @@ export const vscodeMock = {
     createOutputChannel: () => ({
       ...disposable,
       appendLine: (message: string) => messages.push(message),
+      clear: () => {
+        messages.length = 0;
+      },
     }),
     createStatusBarItem: () => ({
       ...disposable,

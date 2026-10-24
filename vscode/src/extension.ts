@@ -27,6 +27,8 @@ export const activate = (context: vscode.ExtensionContext): void => {
   context.subscriptions.push(diagnostics, output, status);
 
   const check = async (): Promise<void> => {
+    // 出力は今回の失敗だけにする。保存のたびに同じ理由が積み上がると、どれが今のものか分からない
+    output.clear();
     const node = vscode.workspace.getConfiguration("mujun").get<string>("nodePath", "node");
     const configs = await vscode.workspace.findFiles(CONFIG_GLOB, "**/node_modules/**");
     const next = new Map<string, vscode.Diagnostic[]>();
